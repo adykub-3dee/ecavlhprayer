@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="sk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#181b1c">
+  <meta name="description" content="40 dní modlitieb za náš cirkevný zbor – spoločný modlitebný rozpis od 9. novembra do 18. decembra 2026.">
+  <meta name="robots" content="noindex, nofollow, noarchive">
+  <title>40 dní modlitieb • ECAV</title>
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="preload" href="assets/kostol.webp" as="image" type="image/webp">
+  <link rel="stylesheet" href="style.css">
+  <script src="config.js"></script>
+  <script type="module" src="js/app.mjs"></script>
+</head>
+<body>
+  <div class="photowall" aria-hidden="true"></div>
+  <div class="photowall-overlay" aria-hidden="true"></div>
+  <div id="app" class="app-shell">
+    <header class="topbar">
+      <div class="brand"><span class="brand-mark" aria-hidden="true">✦</span><div><span class="eyebrow">ECAV • MODLITEBNÁ REŤAZ</span><h1>40 dní modlitieb</h1></div></div>
+      <div class="header-actions">
+        <button id="topics-button" class="button button-outline" type="button" aria-haspopup="dialog"><span aria-hidden="true">✧</span> Námety <span id="topic-badge" class="small-number">0</span></button>
+        <button id="lock-button" class="button button-outline lock-button" type="button">🔒 Odomknúť</button>
+        <button id="refresh-button" class="button button-ghost" type="button" title="Aktualizovať zápisy" aria-label="Aktualizovať zápisy"><span aria-hidden="true">↻</span></button>
+      </div>
+    </header>
+
+    <main>
+      <section class="intro content-width" aria-labelledby="intro-heading">
+        <div class="intro-content">
+          <span class="kicker"><span class="live-dot"></span> 9. NOVEMBER — 18. DECEMBER 2026</span>
+          <h2 id="intro-heading">Každý deň.<br><em>Jedno spoločné spojenie.</em></h2>
+          <p>Vyberte si jeden deň a venujte ho modlitbe za náš cirkevný zbor. Spolu vytvoríme 40-dňovú reťaz modlitieb.</p>
+          <div id="date-status" class="date-status" aria-live="polite">Načítavam aktuálny deň…</div>
+        </div>
+        <div class="progress-panel" aria-label="Priebeh modlitebnej reťaze">
+          <div class="progress-upper"><span>OBSADENÉ DNI</span><strong id="filled-count">0 <small>/ 40</small></strong></div>
+          <div class="meter" role="progressbar" aria-label="Obsadenosť dní" aria-valuemin="0" aria-valuemax="40" aria-valuenow="0" id="progress-meter"><span id="progress-fill"></span></div>
+          <div class="progress-lower"><span>Jeden zbor. Jedna modlitba.</span><strong id="percent">0 %</strong></div>
+        </div>
+      </section>
+
+      <section class="timeline-section content-width" aria-label="Výber modlitebného dňa">
+        <div class="section-caption"><div><span class="eyebrow">VYBERTE SI DÁTUM</span><h3>Modlitebný kalendár</h3></div><div class="legend"><span><i class="key today-key"></i> Dnes</span><span><i class="key claimed-key"></i> Obsadené</span><span><i class="key empty-key"></i> Voľné</span></div></div>
+        <div id="timeline" class="timeline"></div>
+      </section>
+
+      <section class="cards-section" aria-label="Podrobnosti modlitebných dní">
+        <div class="card-toolbar content-width"><div><span class="eyebrow">MODLITEBNÉ DNI</span><h3>Rozpis prihlásení</h3></div><div class="slider-controls"><button id="slide-left" class="round-button" type="button" aria-label="Predchádzajúce dni">‹</button><button id="slide-right" class="round-button" type="button" aria-label="Nasledujúce dni">›</button></div></div>
+        <div id="carousel" class="carousel" tabindex="0" aria-label="Posuvný zoznam 40 modlitebných dní"></div>
+      </section>
+
+      <section class="bottom-information content-width">
+        <div><h3>Spoločne v modlitbe</h3><p>Na zápis a úpravy stačí spoločné heslo. Mená a námety sa ukladajú priamo do tohto GitHub repozitára a zobrazujú ostatným účastníkom.</p></div>
+        <div id="sync-state" class="sync-state" role="status" aria-live="polite"><span class="live-dot"></span> Pripájam sa k rozpisu…</div>
+      </section>
+    </main>
+
+    <footer class="footer content-width"><span>40 DNÍ MODLITIEB · ECAV · 2026</span><span>Mená a námety sú verejne dostupné v GitHub repozitári.</span></footer>
+  </div>
+
+  <div id="topics-overlay" class="overlay" hidden>
+    <div class="overlay-shade" data-close-topics="true"></div>
+    <section class="drawer" role="dialog" aria-modal="true" aria-labelledby="topics-title" tabindex="-1">
+      <div class="drawer-header"><div><span class="eyebrow">SPOLOČNÉ ÚMYSLY</span><h2 id="topics-title">Modlitebné námety</h2></div><button id="topics-close" class="round-button" type="button" aria-label="Zavrieť námety">×</button></div>
+      <p class="drawer-lead">Čo môžeme spoločne prinášať v modlitbách?</p>
+      <div id="topics-list" class="topics-list" aria-live="polite"></div>
+      <form id="topic-form" class="topic-form">
+        <label id="topic-form-label" for="topic-title">Nový námet</label>
+        <input id="topic-title" name="title" maxlength="100" minlength="2" placeholder="Napr. deti a mládež" required autocomplete="off">
+        <label for="topic-description">Popis (voliteľný)</label>
+        <textarea id="topic-description" name="description" maxlength="1200" rows="3" placeholder="Za čo sa chceme modliť…"></textarea>
+        <button id="topic-submit" class="button button-primary form-submit" type="submit">Pridať námet</button>
+        <button id="topic-cancel" class="edit-link" type="button" hidden>Zrušiť úpravu</button>
+        <p class="tiny-help">Námet sa uloží po zadaní spoločného hesla. GitHub účet nie je potrebný.</p>
+      </form>
+    </section>
+  </div>
+  <div id="password-overlay" class="overlay password-overlay" hidden>
+    <div class="overlay-shade" data-close-password="true"></div>
+    <section class="password-card" role="dialog" aria-modal="true" aria-labelledby="password-title">
+      <button id="password-close" class="round-button password-close" type="button" aria-label="Zavrieť">×</button>
+      <span class="password-symbol" aria-hidden="true">♙</span>
+      <h2 id="password-title">Spoločné heslo</h2>
+      <p>Na zápis alebo úpravy zadajte heslo, ktoré ste dostali od organizátora. Nie je potrebný žiadny účet.</p>
+      <form id="password-form">
+        <label for="password-input">Heslo</label>
+        <input id="password-input" type="password" autocomplete="off" minlength="1" placeholder="Zadajte heslo…" required>
+        <p id="password-error" class="password-error" role="alert"></p>
+        <button id="login-submit" class="button button-primary" type="submit">Odomknúť a pokračovať</button>
+      </form>
+      <small>Odomknutie platí do obnovenia alebo zatvorenia stránky. Na zdieľanom zariadení sa odhláste.</small>
+    </section>
+  </div>
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+</body>
+</html>

@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="sk">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow"><meta name="theme-color" content="#171b1c">
+<title>Jednorazové nastavenie hesla – 40 dní modlitieb</title>
+<style>
+:root{color-scheme:dark}*{box-sizing:border-box}body{margin:0;background:#131817;color:#f3f4f2;font:16px/1.6 system-ui,-apple-system,sans-serif;padding:32px 16px}.wrap{max-width:690px;margin:auto;background:#212824;border:1px solid #485149;border-radius:24px;padding:clamp(22px,5vw,44px);box-shadow:0 30px 100px #0005}h1{line-height:1.15;font-size:clamp(26px,4vw,35px);color:#f1cb7b;margin-top:0}h2{font-size:18px}p{color:#d2dbd0}a{color:#f1cb7b}label{display:block;margin:18px 0 5px;font-weight:700}input,textarea{display:block;width:100%;border:1px solid #6e7a71;border-radius:10px;background:#121713;color:white;padding:12px;font:inherit}input:focus,textarea:focus{outline:2px solid #f1cb7b}button{cursor:pointer;border:0;background:#dfac53;color:#161713;border-radius:10px;font-size:16px;font-weight:750;padding:13px 18px;margin:12px 8px 0 0}button:disabled{opacity:.5;cursor:wait}button.secondary{background:#3b463e;color:white;border:1px solid #8b9189}.info{border-left:3px solid #e7b75d;background:#151a16;padding:12px 15px;border-radius:5px;color:#e6e4d7}.warn{border-left:3px solid #d49191;background:#221b1b;padding:12px 15px;border-radius:5px;color:#ffddd9}.muted{font-size:13px;color:#b0b8b0}#status{min-height:26px;color:#f4ce7e}textarea{min-height:160px;font:12px/1.5 ui-monospace,SFMono-Regular,monospace;word-break:break-all}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <p class="muted">JEDNORAZOVÉ NASTAVENIE • BEZ INÉHO SERVERA</p>
+  <h1>Spoločné heslo pre 40 dní modlitieb</h1>
+  <p>Tu si vytvoríte šifrovaný súbor <code>data/auth.json</code>. Návštevníci budú neskôr písať <strong>len spoločné heslo</strong>, nie GitHub účet ani token.</p>
+  <div class="info">Táto stránka nič neposiela na internet. Token sa zašifruje priamo vo vašom prehliadači. Vygenerovaný súbor vložíte do rovnakého GitHub repozitára ako web.</div>
+  <h2>1. Pripravte si GitHub token</h2>
+  <p>Na <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener noreferrer">GitHub → Fine-grained personal access token</a> vyberte <strong>Only select repositories</strong>, označte len tento repozitár a v Repository permissions nastavte <strong>Contents → Read and write</strong>. Nastavte krátku platnosť, napríklad do 31. 12. 2026.</p>
+  <form id="setup-form">
+    <label for="token">GitHub token (začína <code>github_pat_</code>)</label>
+    <input type="password" id="token" autocomplete="off" spellcheck="false" required placeholder="github_pat_...">
+    <label for="password">Vaše nové spoločné heslo</label>
+    <input type="password" id="password" minlength="12" autocomplete="new-password" required placeholder="Aspoň 12 znakov">
+    <label for="confirm">Potvrdiť heslo</label>
+    <input type="password" id="confirm" minlength="12" autocomplete="new-password" required>
+    <button id="generate" type="submit">Vytvoriť šifrovaný auth.json</button>
+  </form>
+  <p id="status" role="status"></p>
+  <div id="result" hidden>
+    <label for="output">2. Výsledný súbor <code>data/auth.json</code></label>
+    <textarea id="output" readonly spellcheck="false"></textarea>
+    <button type="button" id="download">Stiahnuť auth.json</button>
+    <button type="button" class="secondary" id="copy">Skopírovať obsah</button>
+    <p>Na GitHube otvorte <code>data/auth.json</code>, kliknite na ceruzku <strong>Edit file</strong>, nahraďte celý obsah výsledným JSON a potvrďte <strong>Commit changes</strong>. Alebo nahrajte stiahnutý súbor do priečinka <code>data</code> ako náhradu existujúceho.</p>
+    <p class="info">Potom otvorte hlavnú stránku, vyberte deň, zadajte meno a svoje heslo. Pri správnom nastavení sa meno uloží do <code>data/records.json</code>.</p>
+  </div>
+  <p class="warn"><strong>Dôležité:</strong> ktokoľvek, kto získa spoločné heslo, dokáže v prehliadači získať aj oprávnenie tokenu a meniť obsah daného repozitára. Nepoužívajte rovnaké heslo inde, neukladajte token otvorene do kódu a po skončení projektu ho na GitHube zrušte. Mená zostávajú verejne čitateľné.</p>
+  <p class="muted">Na jednoduché dočasné použitie, nie na citlivé osobné údaje alebo silnú bezpečnosť. Zmena hesla sa vykoná opakovaním tohto postupu.</p>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+let result='';
+function bytesToB64(bytes){return btoa(String.fromCharCode(...bytes));}
+$('setup-form').addEventListener('submit',async e=>{
+  e.preventDefault(); const button=$('generate');$('status').textContent='';
+  const token=$('token').value.trim(),password=$('password').value;
+  if(!/^(github_pat_|ghp_)[A-Za-z0-9_]+$/.test(token)){$('status').textContent='GitHub token má neplatný formát.';return;}
+  if(password.length<12||password!==$('confirm').value){$('status').textContent='Heslá sa musia zhodovať a mať aspoň 12 znakov.';return;}
+  button.disabled=true;
+  try{
+    if(!window.crypto?.subtle)throw Error('Na šifrovanie je potrebný moderný prehliadač s HTTPS alebo lokálne otvorený súbor.');
+    const salt=crypto.getRandomValues(new Uint8Array(16));
+    const iv=crypto.getRandomValues(new Uint8Array(12));
+    const material=await crypto.subtle.importKey('raw',new TextEncoder().encode(password),'PBKDF2',false,['deriveKey']);
+    const key=await crypto.subtle.deriveKey({name:'PBKDF2',salt,iterations:350000,hash:'SHA-256'},material,{name:'AES-GCM',length:256},false,['encrypt']);
+    const cipher=new Uint8Array(await crypto.subtle.encrypt({name:'AES-GCM',iv},key,new TextEncoder().encode(token)));
+    result=JSON.stringify({version:1,algorithm:'PBKDF2-AES-GCM',iterations:350000,salt:bytesToB64(salt),iv:bytesToB64(iv),ciphertext:bytesToB64(cipher)},null,2)+'\n';
+    $('output').value=result;$('result').hidden=false;$('status').textContent='Hotovo. Vložte vygenerovaný obsah do data/auth.json na GitHube.';
+    $('token').value='';$('password').value='';$('confirm').value='';
+  }catch(err){$('status').textContent='Chyba: '+err.message;}finally{button.disabled=false;}
+});
+$('copy').addEventListener('click',async()=>{try{await navigator.clipboard.writeText(result);$('status').textContent='Obsah bol skopírovaný.';}catch{$('output').select();$('status').textContent='Označený obsah skopírujte ručne.';}});
+$('download').addEventListener('click',()=>{
+  const url=URL.createObjectURL(new Blob([result],{type:'application/json;charset=utf-8'}));
+  const a=document.createElement('a');a.href=url;a.download='auth.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+});
+</script>
+</body>
+</html>
